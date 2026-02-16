@@ -10,8 +10,27 @@ import {
   renderSearchError,
 } from "./ui.js";
 
+const LOCATION_KEY = "weather-location";
 const app = document.getElementById("app");
 let lastResults = [];
+
+function saveLocation(latitude, longitude) {
+  try {
+    localStorage.setItem(LOCATION_KEY, JSON.stringify({ latitude, longitude }));
+  } catch {}
+}
+
+function loadLocation() {
+  try {
+    const stored = localStorage.getItem(LOCATION_KEY);
+    if (!stored) return null;
+    const { latitude, longitude } = JSON.parse(stored);
+    if (typeof latitude === "number" && typeof longitude === "number") {
+      return { latitude, longitude };
+    }
+  } catch {}
+  return null;
+}
 
 async function fetchAndRender(latitude, longitude, locationName) {
   renderLoading(app);
@@ -53,6 +72,7 @@ window.__selectLocation = (index) => {
   const name = [result.name, result.admin1, result.country]
     .filter(Boolean)
     .join(", ");
+  saveLocation(result.latitude, result.longitude);
   fetchAndRender(result.latitude, result.longitude, name);
 };
 
@@ -61,10 +81,16 @@ async function init() {
 
   try {
     const { latitude, longitude } = await getLocation();
+    saveLocation(latitude, longitude);
     const weather = await getWeather(latitude, longitude);
     renderWeather(app, weather);
   } catch {
-    showLocationSearch();
+    const cached = loadLocation();
+    if (cached) {
+      fetchAndRender(cached.latitude, cached.longitude);
+    } else {
+      showLocationSearch();
+    }
   }
 }
 

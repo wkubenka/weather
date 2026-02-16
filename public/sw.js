@@ -1,9 +1,9 @@
-const CACHE_NAME = "weather-v1";
-const STATIC_ASSETS = ["/", "/index.html"];
+const CACHE_NAME = "weather-v2";
+const PRECACHE = ["/", "/index.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
   );
   self.skipWaiting();
 });
@@ -23,8 +23,11 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Network-first for API calls
-  if (url.hostname === "api.open-meteo.com") {
+  // API requests (forecast + geocoding): network-first, cache fallback
+  if (
+    url.hostname === "api.open-meteo.com" ||
+    url.hostname === "geocoding-api.open-meteo.com"
+  ) {
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -37,8 +40,45 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  // Navigation requests (HTML): network-first, cache fallback
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Hashed assets (/assets/*): cache-first, write to cache on miss
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ||
+          fetch(request).then((response) => {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            return response;
+          })
+      )
+    );
+    return;
+  }
+
+  // Other static assets (icons, manifest, etc.): stale-while-revalidate
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request))
+    caches.match(request).then((cached) => {
+      const fetchPromise = fetch(request).then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        return response;
+      });
+      return cached || fetchPromise;
+    })
   );
 });
