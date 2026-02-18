@@ -6,7 +6,7 @@ export async function getWeather(latitude, longitude) {
     longitude,
     current: "temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,uv_index",
     hourly: "temperature_2m,precipitation_probability,uv_index,weather_code",
-    daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max",
+    daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset",
     temperature_unit: "fahrenheit",
     wind_speed_unit: "mph",
     timezone: "auto",
@@ -50,6 +50,8 @@ export async function getWeather(latitude, longitude) {
       low: Math.round(data.daily.temperature_2m_min[i]),
       precipChance: data.daily.precipitation_probability_max[i],
       uvIndexMax: Math.round(data.daily.uv_index_max[i] * 10) / 10,
+      sunrise: data.daily.sunrise[i],
+      sunset: data.daily.sunset[i],
     })),
     timezone: data.timezone,
   };

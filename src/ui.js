@@ -42,6 +42,31 @@ function formatHour(timeStr) {
   return date.toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
 }
 
+function getMoonPhase(dateStr) {
+  const date = new Date(dateStr + "T12:00:00Z");
+  // Reference new moon: January 6, 2000 18:14 UTC
+  const ref = new Date("2000-01-06T18:14:00Z");
+  const days = (date - ref) / 86400000;
+  const cycle = 29.53059;
+  const phase = ((days % cycle) + cycle) % cycle;
+  const fraction = phase / cycle;
+
+  if (fraction < 0.0625) return { name: "New Moon", icon: "\uD83C\uDF11" };
+  if (fraction < 0.1875) return { name: "Waxing Crescent", icon: "\uD83C\uDF12" };
+  if (fraction < 0.3125) return { name: "First Quarter", icon: "\uD83C\uDF13" };
+  if (fraction < 0.4375) return { name: "Waxing Gibbous", icon: "\uD83C\uDF14" };
+  if (fraction < 0.5625) return { name: "Full Moon", icon: "\uD83C\uDF15" };
+  if (fraction < 0.6875) return { name: "Waning Gibbous", icon: "\uD83C\uDF16" };
+  if (fraction < 0.8125) return { name: "Last Quarter", icon: "\uD83C\uDF17" };
+  if (fraction < 0.9375) return { name: "Waning Crescent", icon: "\uD83C\uDF18" };
+  return { name: "New Moon", icon: "\uD83C\uDF11" };
+}
+
+function formatTime(isoStr) {
+  const date = new Date(isoStr);
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
 function uvLabel(uv) {
   if (uv < 3) return "Low";
   if (uv < 6) return "Moderate";
@@ -187,6 +212,9 @@ export function renderWeather(container, weather, locationName) {
     })
     .join("");
 
+  const today = weather.daily[0];
+  const moon = getMoonPhase(today.date);
+
   const locationDisplay = locationName || "Your Location";
 
   container.innerHTML = `
@@ -201,7 +229,7 @@ export function renderWeather(container, weather, locationName) {
       <p class="text-sm text-slate-400 mt-1">Feels like ${current.feelsLike}\u00b0</p>
     </header>
 
-    <div class="grid grid-cols-3 gap-3 mb-8">
+    <div class="grid grid-cols-3 gap-3 mb-4">
       <div class="bg-white/5 rounded-xl p-4 text-center">
         <p class="text-xs text-slate-400 uppercase tracking-wide mb-1">Wind</p>
         <p class="text-xl font-medium">${current.windSpeed} <span class="text-sm text-slate-400">mph</span></p>
@@ -214,6 +242,24 @@ export function renderWeather(container, weather, locationName) {
         <p class="text-xs text-slate-400 uppercase tracking-wide mb-1">UV Index</p>
         <p class="text-xl font-medium ${uvColor(current.uvIndex)}">${current.uvIndex}</p>
         <p class="text-xs text-slate-400 mt-0.5">${uvLabel(current.uvIndex)}</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 mb-8">
+      <div class="bg-white/5 rounded-xl p-4 text-center">
+        <p class="text-xs text-slate-400 uppercase tracking-wide mb-1">Sunrise</p>
+        <p class="text-lg">☀️</p>
+        <p class="text-sm font-medium">${formatTime(today.sunrise)}</p>
+      </div>
+      <div class="bg-white/5 rounded-xl p-4 text-center">
+        <p class="text-xs text-slate-400 uppercase tracking-wide mb-1">Sunset</p>
+        <p class="text-lg">🌅</p>
+        <p class="text-sm font-medium">${formatTime(today.sunset)}</p>
+      </div>
+      <div class="bg-white/5 rounded-xl p-4 text-center">
+        <p class="text-xs text-slate-400 uppercase tracking-wide mb-1">Moon</p>
+        <p class="text-lg">${moon.icon}</p>
+        <p class="text-xs text-slate-400 mt-0.5">${moon.name}</p>
       </div>
     </div>
 
