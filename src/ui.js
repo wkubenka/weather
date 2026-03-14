@@ -184,7 +184,7 @@ export function renderWeather(container, weather, locationName) {
       const info = getWeatherInfo(hour.weatherCode);
       return `
         <div class="flex flex-col items-center gap-1.5 min-w-[4rem] text-center">
-          <span class="text-xs text-slate-400">${i === 0 ? "Now" : formatHour(hour.time)}</span>
+          <span class="text-xs text-slate-400">${formatHour(hour.time)}</span>
           <span class="text-xl">${info.icon}</span>
           <span class="text-sm font-medium">${hour.temperature}\u00b0</span>
           <span class="text-xs text-slate-400">${hour.precipChance}%</span>
