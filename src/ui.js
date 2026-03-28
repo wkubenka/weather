@@ -175,7 +175,25 @@ export function renderSearchError(message) {
   errorEl.classList.remove("hidden");
 }
 
-export function renderWeather(container, weather, locationName) {
+function aqiLabel(aqi) {
+  if (aqi <= 50) return "Good";
+  if (aqi <= 100) return "Moderate";
+  if (aqi <= 150) return "Unhealthy (SG)";
+  if (aqi <= 200) return "Unhealthy";
+  if (aqi <= 300) return "Very Unhealthy";
+  return "Hazardous";
+}
+
+function aqiColor(aqi) {
+  if (aqi <= 50) return "text-green-400";
+  if (aqi <= 100) return "text-yellow-400";
+  if (aqi <= 150) return "text-orange-400";
+  if (aqi <= 200) return "text-red-400";
+  if (aqi <= 300) return "text-purple-400";
+  return "text-rose-600";
+}
+
+export function renderWeather(container, weather, locationName, airQuality) {
   const current = weather.current;
   const currentInfo = getWeatherInfo(current.weatherCode);
 
@@ -229,7 +247,7 @@ export function renderWeather(container, weather, locationName) {
       <p class="text-sm text-slate-400 mt-1">Feels like ${current.feelsLike}\u00b0</p>
     </header>
 
-    <div class="grid grid-cols-3 gap-3 mb-4">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
       <div class="bg-white/5 rounded-xl p-4 text-center">
         <p class="text-xs text-slate-400 uppercase tracking-wide mb-1">Wind</p>
         <p class="text-xl font-medium">${current.windSpeed} <span class="text-sm text-slate-400">mph</span></p>
@@ -243,6 +261,13 @@ export function renderWeather(container, weather, locationName) {
         <p class="text-xl font-medium ${uvColor(current.uvIndex)}">${current.uvIndex}</p>
         <p class="text-xs text-slate-400 mt-0.5">${uvLabel(current.uvIndex)}</p>
       </div>
+      ${airQuality ? `
+      <div class="bg-white/5 rounded-xl p-4 text-center">
+        <p class="text-xs text-slate-400 uppercase tracking-wide mb-1">Air Quality</p>
+        <p class="text-xl font-medium ${aqiColor(airQuality.aqi)}">${airQuality.aqi}</p>
+        <p class="text-xs text-slate-400 mt-0.5">${aqiLabel(airQuality.aqi)}</p>
+      </div>
+      ` : ""}
     </div>
 
     <div class="grid grid-cols-3 gap-3 mb-8">

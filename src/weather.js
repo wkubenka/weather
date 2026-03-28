@@ -1,4 +1,5 @@
 const API_BASE = "https://api.open-meteo.com/v1/forecast";
+const AIR_QUALITY_BASE = "https://air-quality-api.open-meteo.com/v1/air-quality";
 
 export async function getWeather(latitude, longitude) {
   const params = new URLSearchParams({
@@ -54,5 +55,27 @@ export async function getWeather(latitude, longitude) {
       sunset: data.daily.sunset[i],
     })),
     timezone: data.timezone,
+  };
+}
+
+export async function getAirQuality(latitude, longitude) {
+  const params = new URLSearchParams({
+    latitude,
+    longitude,
+    current: "us_aqi,pm10,pm2_5",
+  });
+
+  const response = await fetch(`${AIR_QUALITY_BASE}?${params}`);
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+
+  return {
+    aqi: data.current.us_aqi,
+    pm10: Math.round(data.current.pm10 * 10) / 10,
+    pm25: Math.round(data.current.pm2_5 * 10) / 10,
   };
 }

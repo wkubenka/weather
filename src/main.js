@@ -1,6 +1,6 @@
 import "./style.css";
 import { getLocation, geocode } from "./location.js";
-import { getWeather } from "./weather.js";
+import { getWeather, getAirQuality } from "./weather.js";
 import {
   renderLoading,
   renderError,
@@ -80,8 +80,11 @@ function loadLocation() {
 async function fetchAndRender(latitude, longitude, locationName) {
   renderLoading(app);
   try {
-    const weather = await getWeather(latitude, longitude);
-    renderWeather(app, weather, locationName);
+    const [weather, airQuality] = await Promise.all([
+      getWeather(latitude, longitude),
+      getAirQuality(latitude, longitude).catch(() => null),
+    ]);
+    renderWeather(app, weather, locationName, airQuality);
     try {
       localStorage.setItem(LAST_FETCH_KEY, JSON.stringify({
         time: Date.now(),
